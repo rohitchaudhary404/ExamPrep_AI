@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ExamPrep AI — Study Assistant for Schools & Universities</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>" />
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-top">
+      <button id="settingsBtn" class="btn btn-ghost btn-sm">⚙ Settings</button>
+    </div>
+    <div class="hero-inner">
+      <div class="hero-badge">AI-Powered · Schools & Universities</div>
+      <h1>🎓 ExamPrep <span>AI</span></h1>
+      <p class="tagline">
+        Paste your notes → get <strong>key points</strong>, <strong>important questions</strong>,
+        <strong>high-yield topics</strong> and the <strong>most repeated previous-year questions</strong> (local + from the web).
+      </p>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- ============ SETTINGS ============ -->
+    <section class="card settings-card" id="settingsCard">
+      <h2 class="card-title">⚙ Settings</h2>
+      <div class="grid-2">
+        <div class="field">
+          <label for="settingsApiKey">LLM API key <span class="hint">(saved in your browser only)</span></label>
+          <input type="password" id="settingsApiKey" placeholder="gsk_…" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="searchProvider">Web search provider</label>
+          <select id="searchProvider">
+            <option value="duckduckgo" selected>DuckDuckGo (free, no key)</option>
+            <option value="tavily">Tavily (API key)</option>
+            <option value="serpapi">SerpAPI / Google (API key)</option>
+          </select>
+        </div>
+      </div>
+      <div class="field" id="searchKeyField" hidden>
+        <label for="settingsSearchKey">Search API key</label>
+        <input type="password" id="settingsSearchKey" placeholder="Your search API key…" autocomplete="off" />
+      </div>
+      <div class="field">
+        <label for="settingsModel">AI model</label>
+        <select id="settingsModel">
+          <option value="openai/gpt-oss-120b" selected>GPT-OSS 120B (best)</option>
+          <option value="qwen/qwen3.8-27b">Qwen 3.8 27B</option>
+          <option value="allam-2-7b">ALLAM-2 7B (fast)</option>
+        </select>
+      </div>
+      <div class="actions">
+        <button id="saveSettingsBtn" class="btn btn-primary btn-sm">Save settings</button>
+        <button id="closeSettingsBtn" class="btn btn-ghost btn-sm">Close</button>
+      </div>
+      <p id="settingsStatus" class="ok-box" hidden></p>
+    </section>
+
+    <!-- ============ INPUT CARD ============ -->
+    <section class="card input-card" id="inputCard">
+      <h2 class="card-title">📝 Your Notes</h2>
+
+      <div class="seg" id="levelSeg">
+        <button type="button" data-level="school" class="active">🏫 School</button>
+        <button type="button" data-level="university">🎓 University</button>
+      </div>
+
+      <div id="schoolFields" class="grid">
+        <div class="field">
+          <label for="board">Board</label>
+          <select id="board">
+            <option value="CBSE" selected>CBSE</option>
+            <option value="ICSE">ICSE</option>
+            <option value="State Board">State Board</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="classLevel">Class</label>
+          <select id="classLevel">
+            <option value="">Select…</option>
+            <option value="9">Class 9</option>
+            <option value="10" selected>Class 10</option>
+            <option value="11">Class 11</option>
+            <option value="12">Class 12</option>
+          </select>
+        </div>
+        <div class="field" style="grid-column: span 2;">
+          <label for="subject">Subject</label>
+          <select id="subject">
+            <option value="">Auto-detect / General</option>
+            <option value="Science">Science</option>
+            <option value="Mathematics">Mathematics</option>
+            <option value="Physics">Physics</option>
+            <option value="Chemistry">Chemistry</option>
+            <option value="Biology">Biology</option>
+            <option value="Social Science">Social Science</option>
+            <option value="English">English</option>
+            <option value="Economics">Economics</option>
+            <option value="Accountancy">Accountancy</option>
+            <option value="Business Studies">Business Studies</option>
+            <option value="Computer Science">Computer Science</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="uniFields" class="grid" hidden>
+        <div class="field">
+          <label for="university">University / College</label>
+          <input type="text" id="university" placeholder="e.g. Delhi University, IIT…" />
+        </div>
+        <div class="field">
+          <label for="course">Course / Program</label>
+          <input type="text" id="course" placeholder="e.g. B.Tech CSE, B.Sc Physics…" />
+        </div>
+        <div class="field">
+          <label for="semester">Semester / Year</label>
+          <select id="semester">
+            <option value="">Select…</option>
+            <option value="1">Semester 1</option>
+            <option value="2">Semester 2</option>
+            <option value="3">Semester 3</option>
+            <option value="4">Semester 4</option>
+            <option value="5">Semester 5</option>
+            <option value="6">Semester 6</option>
+            <option value="7">Semester 7</option>
+            <option value="8">Semester 8</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="uniSubject">Subject</label>
+          <input type="text" id="uniSubject" placeholder="e.g. Operating Systems, Electromagnetism…" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="notes">Study notes <span class="required">*</span></label>
+        <textarea id="notes" rows="10"
+          placeholder="Paste your class notes here…&#10;&#10;e.g.  Electricity: Ohm's law — current through a conductor is directly proportional to potential difference, V = IR. Resistance depends on length, area and material…"></textarea>
+      </div>
+
+      <div class="toggle-row">
+        <input type="checkbox" id="webSearchToggle" checked />
+        <label for="webSearchToggle">🔎 Search the web for repeated PYQs <span class="hint">— analyses which questions are asked most often</span></label>
+      </div>
+
+      <div class="actions">
+        <button id="analyzeBtn" class="btn btn-primary">✨ Analyze Notes</button>
+        <button id="uploadBtn" class="btn btn-ghost" title="Upload a .txt, .md, .docx or .pdf file">📎 Upload file</button>
+        <button id="clearBtn" class="btn btn-ghost">Clear</button>
+        <input type="file" id="fileInput" accept=".txt,.md,.markdown,.docx,.pdf" hidden />
+      </div>
+      <p id="uploadStatus" class="upload-status"></p>
+      <div id="errorBox" class="error-box" hidden></div>
+    </section>
+
+    <!-- ============ LOADING ============ -->
+    <section class="loading" id="loading" hidden>
+      <div class="spinner"></div>
+      <p id="loadingText">Analysing your notes…</p>
+    </section>
+
+    <!-- ============ RESULTS ============ -->
+    <section id="results" hidden>
+      <div class="results-bar">
+        <h2>📊 Study Pack</h2>
+        <div class="export-btns">
+          <button id="downloadBtn" class="btn btn-outline">⬇ Markdown</button>
+          <button id="downloadDocxBtn" class="btn btn-outline">⬇ Word (.docx)</button>
+          <button id="downloadPdfBtn" class="btn btn-outline">⬇ PDF</button>
+        </div>
+      </div>
+
+      <article class="card" id="summaryCard" hidden>
+        <h3 class="section-head">📌 Summary</h3>
+        <p id="summaryText" class="summary-text"></p>
+      </article>
+
+      <article class="card">
+        <h3 class="section-head">🔑 Key Points</h3>
+        <ol id="keyPointsList" class="keypoints"></ol>
+      </article>
+
+      <article class="card">
+        <h3 class="section-head">🎯 Important Topics <span class="badge">high exam probability</span></h3>
+        <div id="topicsList" class="topic-grid"></div>
+      </article>
+
+      <article class="card">
+        <h3 class="section-head">❓ Most Important Questions</h3>
+        <div id="questionsList" class="question-list"></div>
+      </article>
+
+      <article class="card">
+        <h3 class="section-head">🗂 Previous Year Questions (from local database)</h3>
+        <p class="muted">Matched from the local question bank.</p>
+        <div id="pyqList" class="pyq-list"></div>
+      </article>
+
+      <article class="card" id="webCard" hidden>
+        <h3 class="section-head">🌐 Most Repeated PYQs <span class="badge">analysed across the web</span></h3>
+        <div id="webTrend" class="trend-box" hidden></div>
+        <div id="webTopics" class="topic-grid"></div>
+        <div id="webQuestions" class="pyq-list"></div>
+        <div class="sources-wrap">
+          <h4 class="sources-head">📎 Sources</h4>
+          <div id="webSources" class="source-list"></div>
+        </div>
+        <p class="muted" id="webNote"></p>
+      </article>
+
+      <p class="muted meta" id="metaNote"></p>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>ExamPrep AI · Runs locally on your machine · Your API keys are stored only in your browser (or your <code>.env</code>).</p>
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
